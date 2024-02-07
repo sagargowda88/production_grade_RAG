@@ -9,11 +9,14 @@ from sentence_transformers import SentenceTransformer
 logging.basicConfig(filename='vector_store.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class VectorStore:
-    def __init__(self, embedding_model='model/', max_workers=4):
+    def __init__(self, embedding_model='model/', max_workers=4, load_from_cache=True):
         self.vector_data = {}
         self.vector_index = {}
         self.embedding_model = SentenceTransformer(embedding_model)
         self.max_workers = max_workers
+        
+        if load_from_cache:
+            self.load_from_cache()
 
     def create_1d_string_list(self, data, cols):
         data_rows = data[cols].astype(str).values
@@ -34,13 +37,18 @@ class VectorStore:
         with open(f"./embedding_storage/{data_hash}.pkl", "wb") as f:
             pickle.dump(embeddings, f)
 
+    def load_from_cache(self):
+        data_hash = self.get_data_hash(data)  # Assuming data is accessible
+        cached_embeddings = self.load_embeddings_from_db(data_hash)
+        if cached_embeddings is not None:
+            self.vector_data, self.vector_index = cached_embeddings
+
     def index_data(self, data, cols):
         try:
             data_hash = self.get_data_hash(data)
             cached_embeddings = self.load_embeddings_from_db(data_hash)
             if cached_embeddings is not None:
-                self.vector_data = cached_embeddings[0]
-                self.vector_index = cached_embeddings[1]
+                self.vector_data, self.vector_index = cached_embeddings
                 return
 
             data_1d = self.create_1d_string_list(data, cols)
