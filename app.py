@@ -15,7 +15,7 @@ def _upload_and_index_data(uploaded_file):
         data = pd.read_csv(uploaded_file, encoding_errors="ignore")
         cols_to_index = data['instruction']
 
-        vector_store = VectorStore()
+        vector_store = VectorStore(load_from_cache=False)  # Instantiate VectorStore without loading from cache
         vector_store.index_data(data, cols_to_index)
         logging.info("Data uploaded and indexed successfully.")
         return True
@@ -32,6 +32,7 @@ def main():
         # Regular mode: handle user queries
         if query:
             data = pd.read_csv('./Training_data.csv', encoding_errors="ignore")
+            vector_store = VectorStore(load_from_cache=True)  # Instantiate VectorStore with loading from cache
             result_ids_and_scores = vector_store.find_similar_vectors(query, 5)
             result_df = data.loc[[uid for uid, _ in result_ids_and_scores]].reset_index(drop=True)
             for index, row in result_df.iterrows():
