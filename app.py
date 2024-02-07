@@ -1,5 +1,4 @@
 # app.py
-import sys
 import logging
 from vector_store import VectorStore
 import pandas as pd
@@ -25,6 +24,9 @@ def upload_and_index_data(uploaded_file):
         return False
 
 def main():
+    user_question = "fetch me rule details where exception concept is book"
+    query = user_question
+    context = ""
     try:
         if len(sys.argv) > 1 and sys.argv[1] == "--upload-index":
             # Developer mode: upload and index data
@@ -32,9 +34,6 @@ def main():
                 return
         else:
             # Regular mode: handle user queries
-            user_question = "fetch me rule details where exception concept is book"
-            query = user_question
-            context = ""
             if query:
                 result_ids_and_scores = vector_store.find_similar_vectors(query, 5)
                 result_df = data.loc[[uid for uid, _ in result_ids_and_scores]].reset_index(drop=True)
@@ -42,12 +41,14 @@ def main():
                     context += f"question: {row['instruction']}\nanswer: {row['output']}\n\n"
                 logging.info("Context generated successfully.")
                 logging.info(context)
+        return user_question, context
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
 
 if __name__ == "__main__":
     main()
+
 
 
 # python app.py --upload-index
